@@ -1,0 +1,39 @@
+name: Sync Data to VPS
+
+on:
+  push:
+    paths:
+      - 'packages/output/**'
+    branches:
+      - main
+      - master
+  workflow_dispatch:  # Enable manual trigger
+
+jobs:
+  sync-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy output data to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "packages/output/*"
+          target: "/var/www/rdtr-spasial-app/packages/"
+          rm: true  # Remove files on destination that don't exist in source
+
+      - name: Restart Backend on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/rdtr-spasial-app
+            docker-compose restart backend
+            echo "✅ Data synced and backend restarted!"
