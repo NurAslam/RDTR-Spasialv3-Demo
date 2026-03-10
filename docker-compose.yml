@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: rdtr-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./packages/data:/app/data:ro
+      - ./apps/backend/src:/app/src
+    environment:
+      - PYTHONUNBUFFERED=1
+      - APP_NAME=RDTR Spasial API
+      - DEBUG=false
+      - FRONTEND_URL=http://localhost:3000
+      - CORS_ORIGINS=["http://localhost:3000","http://localhost:3001"]
+    networks:
+      - rdtr-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    container_name: rdtr-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - rdtr-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    container_name: rdtr-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./apps/frontend/public:/usr/share/nginx/html:ro
+      - ./apps/frontend/.next/standalone:/.next/standalone:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - rdtr-network
+
+networks:
+  rdtr-network:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local
