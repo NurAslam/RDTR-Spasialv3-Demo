@@ -28,6 +28,8 @@ module.exports = {
         BASE_DIR: '/home/ml/be-rdtr-di',
         PATH: '/home/ml/.local/bin:/usr/local/bin:/usr/bin:/bin',
         PYTHONUNBUFFERED: '1',
+        // Set production frontend URL for CORS
+        PRODUCTION_FRONTEND_URL: 'https://rdtr.urbansolv.co.id',
       },
       error_file: '/home/ml/be-rdtr-di/logs/backend-error.log',
       out_file: '/home/ml/be-rdtr-di/logs/backend-out.log',
