@@ -76,6 +76,9 @@ class Settings(BaseSettings):
         description="Allowed CORS origins",
     )
 
+    # Production Frontend URL
+    PRODUCTION_FRONTEND_URL: str = ""
+
     # Data Paths
     BASE_DIR: Path = Field(default_factory=_get_base_dir)
     DATA_DIR: Path = Field(default_factory=_get_data_dir)

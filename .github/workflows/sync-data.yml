@@ -24,7 +24,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "packages/output/"
-          target: "/home/ml/be-rdtr-di/"
+          target: "/home/ml/be-rdtr-di/packages/"
           rm: true
 
       - name: Restart Backend on VPS
