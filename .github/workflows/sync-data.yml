@@ -12,7 +12,7 @@ on:
 jobs:
   sync-data:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,9 +23,9 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "packages/output/*"
-          target: "/var/www/rdtr-spasial-app/packages/"
-          rm: true  # Remove files on destination that don't exist in source
+          source: "packages/output/"
+          target: "/home/ml/rdtr-spasial/"
+          rm: true
 
       - name: Restart Backend on VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -34,6 +34,8 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /var/www/rdtr-spasial-app
-            docker-compose restart backend
+            # Restart backend to load new data
+            pkill -f "uvicorn app.main:app" && sleep 2
+            cd /home/ml/rdtr-spasial
+            nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 >> /home/ml/rdtr-spasial/app.log 2>&1 &
             echo "✅ Data synced and backend restarted!"

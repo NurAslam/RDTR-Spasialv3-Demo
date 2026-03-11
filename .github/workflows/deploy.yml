@@ -1,53 +1,32 @@
-name: Deploy to VPS
+name: Deploy Backend to VPS
 
 on:
   push:
     branches:
       - main
       - master
-  workflow_dispatch:  # Enable manual trigger
+    paths:
+      - "apps/backend/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch: # Enable manual trigger
 
 jobs:
-  deploy:
+  deploy-backend:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub (optional - remove if not using registry)
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build Frontend Image
-        run: |
-          docker build -t rdtr-frontend:${{ github.sha }} ./apps/frontend
-          docker tag rdtr-frontend:${{ github.sha }} rdtr-frontend:latest
-
-      - name: Build Backend Image
-        run: |
-          docker build -t rdtr-backend:${{ github.sha }} ./apps/backend
-          docker tag rdtr-backend:${{ github.sha }} rdtr-backend:latest
-
-      - name: Save images to tar
-        run: |
-          docker save rdtr-frontend:latest rdtr-backend:latest | gzip > images.tar.gz
-
-      - name: Copy files to VPS
+      - name: Copy backend files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "images.tar.gz,docker-compose.prod.yml,nginx.conf"
-          target: "/var/www/rdtr-spasial-app"
-          strip_components: 0
+          source: "apps/backend/"
+          target: "/home/ml/be-rdtr-di"
+          rm: true
 
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -56,21 +35,16 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /var/www/rdtr-spasial-app
-            
-            # Load images
-            gunzip < images.tar.gz | docker load
-            
-            # Copy docker-compose.prod.yml to docker-compose.yml
-            cp docker-compose.prod.yml docker-compose.yml
-            
-            # Stop old containers
-            docker-compose down
-            
-            # Start new containers
-            docker-compose up -d
-            
-            # Cleanup
-            rm images.tar.gz
-            
-            echo "✅ Deployment complete!"
+            cd /home/ml/rdtr-spasial
+
+            # Install dependencies
+            pip install -r requirements.txt -q
+
+            # Kill old process
+            pkill -f "uvicorn app.main:app" || true
+
+            # Start backend in background
+            nohup uvicorn app.main:app --host 0.0.0.0 --port 4004 > /home/ml/rdtr-spasial/app.log 2>&1 &
+
+            echo "✅ Backend deployed successfully!"
+            echo "Backend URL: http://${{ secrets.VPS_HOST }}:4004"
