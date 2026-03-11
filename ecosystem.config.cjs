@@ -14,13 +14,18 @@ module.exports = {
     {
       name: '4004-be-rdtr-di',
       script: 'uvicorn',
-      args: 'app.main:app --host 0.0.0.0 --port 4004',
-      cwd: '/home/ml/be-rdtr-di',  // FIX: Match deployment target
+      args: 'src.app.main:app --host 0.0.0.0 --port 4004',
+      cwd: '/home/ml/be-rdtr-di',
+      interpreter: 'none',
       instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',
       env: {
+        // Set PYTHONPATH to find the src/app module
+        PYTHONPATH: '/home/ml/be-rdtr-di/src',
+        // Set BASE_DIR explicitly for deployment
+        BASE_DIR: '/home/ml/be-rdtr-di',
         PATH: '/home/ml/.local/bin:/usr/local/bin:/usr/bin:/bin',
         PYTHONUNBUFFERED: '1',
       },
