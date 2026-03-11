@@ -12,7 +12,7 @@ const nextConfig = {
   },
 
   // Webpack configuration for Leaflet
-  webpack: (config) => {
+  webpack: (config: any) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       'leaflet': require.resolve('leaflet'),

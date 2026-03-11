@@ -22,8 +22,8 @@ module.exports = {
       watch: false,
       max_memory_restart: '1G',
       env: {
-        // Set PYTHONPATH to find the src/app module
-        PYTHONPATH: '/home/ml/be-rdtr-di/src',
+        // Set PYTHONPATH to find the src/app module (must point to parent of src/)
+        PYTHONPATH: '/home/ml/be-rdtr-di',
         // Set BASE_DIR explicitly for deployment
         BASE_DIR: '/home/ml/be-rdtr-di',
         PATH: '/home/ml/.local/bin:/usr/local/bin:/usr/bin:/bin',
