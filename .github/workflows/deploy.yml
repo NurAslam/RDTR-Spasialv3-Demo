@@ -35,7 +35,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /home/ml/rdtr-spasial
+            cd /home/ml/be-rdtr-di
 
             # Install dependencies
             pip install -r requirements.txt -q
@@ -44,7 +44,7 @@ jobs:
             pkill -f "uvicorn app.main:app" || true
 
             # Start backend in background
-            nohup uvicorn app.main:app --host 0.0.0.0 --port 4004 > /home/ml/rdtr-spasial/app.log 2>&1 &
+            nohup uvicorn app.main:app --host 0.0.0.0 --port 4004 > /home/ml/be-rdtr-di/app.log 2>&1 &
 
             echo "✅ Backend deployed successfully!"
             echo "Backend URL: http://${{ secrets.VPS_HOST }}:4004"
