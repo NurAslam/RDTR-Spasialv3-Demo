@@ -41,6 +41,12 @@ jobs:
 
             cd /home/ml/be-rdtr-di
 
+            # Move contents of apps/backend/ to root (folder structure adjustment)
+            if [ -d "apps/backend" ]; then
+              mv apps/backend/* . && mv apps/backend/.* . 2>/dev/null || true
+              rm -rf apps/backend
+            fi
+
             # Create logs directory
             mkdir -p logs
 
