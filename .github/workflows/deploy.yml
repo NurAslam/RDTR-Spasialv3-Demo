@@ -44,8 +44,8 @@ jobs:
             # Create logs directory
             mkdir -p logs
 
-            # Install dependencies with full path
-            python3 -m pip install -r apps/backend/requirements.txt -q
+            # Install dependencies (requirements.txt is in root now)
+            python3 -m pip install -r requirements.txt -q
 
             # Install PM2 if not exists
             if ! command -v pm2 &> /dev/null; then

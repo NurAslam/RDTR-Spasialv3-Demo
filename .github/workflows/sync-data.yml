@@ -36,5 +36,5 @@ jobs:
           script: |
             # Restart backend with PM2 to load new data
             pm2 restart 4004-be-rdtr-di
-            pm2 logs 4004-be-rdtr-di --lines 20
+            pm2 logs 4004-be-rdtr-di --lines 20 --nostream
             echo "✅ Data synced and backend restarted!"

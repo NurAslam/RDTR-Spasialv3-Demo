@@ -14,9 +14,8 @@ module.exports = {
     {
       name: '4004-be-rdtr-di',
       script: 'uvicorn',
-      args: 'app.main:app --host 0.0.0.0 --port 4004 --workers 4',
-      cwd: '/home/ml/be-rdtr-di/apps/backend',
-      interpreter: 'none',  // Use system Python with full PATH
+      args: 'app.main:app --host 0.0.0.0 --port 4004',
+      cwd: '/home/ml/be-rdtr-di',  // FIX: Match deployment target
       instances: 1,
       autorestart: true,
       watch: false,
