@@ -24,7 +24,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "packages/output/"
-          target: "/home/ml/rdtr-spasial/"
+          target: "/home/ml/be-rdtr-di/"
           rm: true
 
       - name: Restart Backend on VPS
@@ -34,8 +34,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # Restart backend to load new data
-            pkill -f "uvicorn app.main:app" && sleep 2
-            cd /home/ml/rdtr-spasial
-            nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 >> /home/ml/rdtr-spasial/app.log 2>&1 &
+            # Restart backend with PM2 to load new data
+            pm2 restart 4004-be-rdtr-di
+            pm2 logs 4004-be-rdtr-di --lines 20
             echo "✅ Data synced and backend restarted!"
