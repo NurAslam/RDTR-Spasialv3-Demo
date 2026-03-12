@@ -62,7 +62,7 @@ logs/
 Thumbs.db
 
 # Data
-packages/data/*.geojson
+# packages/data/*.geojson
 !packages/data/.gitkeep
 
 # PM2
@@ -71,3 +71,6 @@ ecosystem.config.js.backup
 
 # Docker
 docker-compose.override.yml
+
+upload-data-to-server.sh/
+manual-upload.sh/

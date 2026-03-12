@@ -112,6 +112,12 @@ class Settings(BaseSettings):
     # Frontend URL (for CORS)
     FRONTEND_URL: str = "http://localhost:3000"
 
+    # Preload Data
+    SKIP_PRELOAD: bool = Field(
+        default=False,
+        description="Skip preloading all data at startup (use on-demand loading instead)",
+    )
+
 
 from functools import lru_cache
 

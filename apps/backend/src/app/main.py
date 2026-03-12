@@ -27,16 +27,20 @@ async def lifespan(app: FastAPI):
     logger.info(f"🚀 {settings.APP_NAME} v{settings.APP_VERSION} starting...")
     logger.info("=" * 60)
 
-    # Pre-load data if data directory exists
+    # Pre-load data if data directory exists and SKIP_PRELOAD is False
     from app.services.data_service import get_data_service
 
-    try:
-        data_service = get_data_service()
-        summary = data_service.load_all_data()
-        logger.info(f"✓ Pre-loaded {summary.total_features:,} features from {len(summary.areas)} areas")
-    except Exception as e:
-        logger.warning(f"Could not pre-load data: {e}")
-        logger.info("Data will be loaded on first request")
+    if not settings.SKIP_PRELOAD:
+        try:
+            data_service = get_data_service()
+            summary = data_service.load_all_data()
+            logger.info(f"✓ Pre-loaded {summary.total_features:,} features from {len(summary.areas)} areas")
+        except Exception as e:
+            logger.warning(f"Could not pre-load data: {e}")
+            logger.info("Data will be loaded on first request")
+    else:
+        logger.info("⚡ SKIP_PRELOAD is enabled - data will be loaded on-demand (lower memory usage)")
+        logger.info("Run without SKIP_PRELOAD env var to enable preloading")
 
     yield
 

@@ -20,7 +20,16 @@ module.exports = {
       instances: 1,
       autorestart: true,
       watch: false,
-      max_memory_restart: '1G',
+      max_memory_restart: '4G',  // Increased from 2G - needed for 2GB GeoJSON + Python overhead
+      // Increase timeout for slow startup (loading 2GB data)
+      listen_timeout: 600000,  // 10 minutes (increased from 5)
+      kill_timeout: 60000,     // 1 minute (decreased - faster kill)
+      wait_ready: false,       // Changed from true - wait_ready can cause issues with long startups
+      // Disable autorestart if it keeps crashing
+      exp_backoff_restart_delay: 10000,  // Increased from 5000
+      min_uptime: '120s',  // Increased from 60s - give more time for large data loading
+      max_restarts: 10,    // Limit restarts to prevent infinite loop
+      autorestart: true,   // Keep autorestart enabled
       env: {
         // Set PYTHONPATH to find both src module and app package
         PYTHONPATH: '/home/ml/be-rdtr-di:/home/ml/be-rdtr-di/src',
@@ -30,6 +39,9 @@ module.exports = {
         PYTHONUNBUFFERED: '1',
         // Set production frontend URL for CORS
         PRODUCTION_FRONTEND_URL: 'https://rdtr.urbansolv.co.id',
+        // Skip preloading data at startup (load on-demand instead)
+        // Set to 'true' if experiencing OOM or restart loops
+        SKIP_PRELOAD: 'true',
       },
       error_file: '/home/ml/be-rdtr-di/logs/backend-error.log',
       out_file: '/home/ml/be-rdtr-di/logs/backend-out.log',
