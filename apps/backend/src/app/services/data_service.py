@@ -379,6 +379,76 @@ class DataService:
         # In production, calculate from actual feature coordinates
         return [109.0, -4.0, 116.0, 2.0]  # Indonesia bounds
 
+    def scan_available_areas(self) -> list[dict]:
+        """
+        Scan available areas from file system WITHOUT loading data.
+        Returns list of available area names with metadata.
+        """
+        logger.info("Scanning available areas (without loading data)...")
+
+        pattern = str(self.data_dir / "**" / "rdtr" / "**" / "*.geojson")
+        geojson_files = glob.glob(pattern, recursive=True)
+
+        area_list: dict[str, dict] = {}  # deduplicate by key
+
+        for filepath in geojson_files:
+            if "/administrasi/" in str(filepath) or "/rtrw/" in str(filepath):
+                continue
+
+            rdtr_key = self._get_rdtr_key(Path(filepath))
+            if rdtr_key and rdtr_key not in area_list:
+                # Get file size for metadata
+                try:
+                    file_size = filepath.stat().st_size
+                    area_list[rdtr_key] = {
+                        "name": rdtr_key,
+                        "file_size": file_size,
+                        "file_path": str(filepath),
+                    }
+                except:
+                    area_list[rdtr_key] = {
+                        "name": rdtr_key,
+                        "file_size": 0,
+                        "file_path": str(filepath),
+                    }
+
+        logger.info(f"Found {len(area_list)} available areas")
+        return list(area_list.values())
+
+    def load_area_by_key(self, area_key: str) -> AreaData | None:
+        """
+        Load a single area by its key without loading all data.
+        This is memory-efficient for lazy loading.
+        """
+        # Check if already loaded in cache
+        cached = self.cache.get_area(area_key)
+        if cached:
+            logger.info(f"Area {area_key} already cached")
+            return cached
+
+        logger.info(f"Loading single area: {area_key}")
+
+        # Find the file for this area
+        pattern = str(self.data_dir / "**" / "rdtr" / "**" / "*.geojson")
+        geojson_files = glob.glob(pattern, recursive=True)
+
+        matching_files = []
+        for filepath in geojson_files:
+            if "/administrasi/" in str(filepath) or "/rtrw/" in str(filepath):
+                continue
+
+            file_key = self._get_rdtr_key(Path(filepath))
+            if file_key == area_key:
+                matching_files.append(Path(filepath))
+
+        if not matching_files:
+            logger.warning(f"No files found for area: {area_key}")
+            return None
+
+        # Load the files
+        area_data = self._load_rdtr_files(area_key, matching_files)
+        return area_data
+
     def get_provinces(self) -> list[str]:
         """
         Get list of all provinces (Kalimantan Barat, Kalimantan Timur).

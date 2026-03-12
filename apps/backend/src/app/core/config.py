@@ -22,10 +22,15 @@ def _get_base_dir() -> Path:
 
 def _get_data_dir() -> Path:
     """Get data directory by checking possible locations."""
+    # First, check if DATA_DIR env var is set (highest priority)
+    if "DATA_DIR" in os.environ:
+        return Path(os.environ["DATA_DIR"])
+
     base = _get_base_dir()
     possible_locations = [
         base / "packages" / "output",                 # Monorepo packages/output
         base / "packages" / "data",                   # Monorepo packages/data
+        base / "src" / "packages",                    # Development src/packages
         base.parent / "RDTR-Spasial-Rev2" / "output",  # Parent folder
         base / "RDTR-Spasial-Rev2" / "output",         # Same level
         Path("/app/data"),                            # Docker

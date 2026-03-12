@@ -20,23 +20,13 @@ router = APIRouter(prefix="/geojson", tags=["geojson"])
 @router.get("/list/all", response_class=ORJSONResponse)
 async def list_all_geojson(data_service: DataServiceDep) -> dict[str, Any]:
     """List all available GeoJSON areas."""
-    cache = get_cache()
-
-    if not cache.is_loaded():
-        data_service.load_all_data()
-
-    all_areas = cache.get_all_areas()
+    # Use lazy scan instead of loading all data
+    available_areas = data_service.scan_available_areas()
 
     return {
         "type": "FeatureCollectionList",
-        "areas": [
-            {
-                "name": name,
-                "feature_count": area.total,
-            }
-            for name, area in all_areas.items()
-        ],
-        "total": len(all_areas),
+        "areas": available_areas,
+        "total": len(available_areas),
     }
 
 
@@ -63,29 +53,37 @@ async def get_geojson(
     """
     cache = get_cache()
 
-    # Ensure data is loaded
-    if not cache.is_loaded():
-        logger.info("Data not loaded, loading now...")
-        data_service.load_all_data()
-
-    # Find matching area (fuzzy matching)
+    # Find matching area key (fuzzy matching)
     matched_key = None
-    all_areas = cache.get_all_areas()
 
+    # First check cache
+    all_areas = cache.get_all_areas()
     for key in all_areas.keys():
         if area_name.lower() in key.lower() or key.lower() in area_name.lower():
             matched_key = key
             break
 
+    # If not in cache, scan available areas
+    if not matched_key:
+        available = data_service.scan_available_areas()
+        for area in available:
+            if area_name.lower() in area["name"].lower() or area["name"].lower() in area_name.lower():
+                matched_key = area["name"]
+                break
+
     if not matched_key:
         raise HTTPException(
             status_code=404,
-            detail=f"Area '{area_name}' not found. Available areas: {list(all_areas.keys())[:10]}...",
+            detail=f"Area '{area_name}' not found.",
         )
 
+    # Load single area on-demand (lazy loading)
     area_data = cache.get_area(matched_key)
     if not area_data:
-        raise HTTPException(status_code=404, detail=f"Area data not found: {matched_key}")
+        logger.info(f"Area not cached, loading now: {matched_key}")
+        area_data = data_service.load_area_by_key(matched_key)
+        if not area_data:
+            raise HTTPException(status_code=404, detail=f"Area data not found: {matched_key}")
 
     # Filter by viewport if bounds provided
     filtered_features: list[dict[str, Any]] = area_data.features
